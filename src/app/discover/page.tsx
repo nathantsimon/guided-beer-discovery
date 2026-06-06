@@ -1,0 +1,212 @@
+"use client";
+
+import { useState } from "react";
+import Link from "next/link";
+
+type StepDef = {
+  id: string;
+  question: string;
+  options: { value: string; label: string }[];
+  conditional?: { dependsOn: string; value: string };
+};
+
+const allSteps: StepDef[] = [
+  {
+    id: "occasion",
+    question: "What's the occasion?",
+    options: [
+      { value: "winding-down", label: "Winding down" },
+      { value: "celebrating", label: "Celebrating" },
+      { value: "friends-round", label: "Friends round" },
+      { value: "gift", label: "Gift" },
+      { value: "treating", label: "Treating myself" },
+    ],
+  },
+  {
+    id: "duration",
+    question: "How long is the session?",
+    options: [
+      { value: "just-one", label: "Just the one" },
+      { value: "longer", label: "A longer session" },
+      { value: "savouring", label: "Slowly savouring something special" },
+      { value: "evening", label: "A proper evening" },
+    ],
+  },
+  {
+    id: "mood",
+    question: "What's your mood?",
+    options: [
+      { value: "switch-off", label: "Switch off" },
+      { value: "sociable", label: "Sociable" },
+      { value: "mindful", label: "Mindful" },
+      { value: "alcohol-free", label: "Alcohol-free" },
+    ],
+  },
+  {
+    id: "mood_mindful",
+    question: "What are you thinking tonight?",
+    options: [
+      { value: "completely-af", label: "Going completely alcohol-free" },
+      { value: "light", label: "Keeping it light and sessionable" },
+    ],
+    conditional: { dependsOn: "mood", value: "mindful" },
+  },
+  {
+    id: "familiarity",
+    question: "How do you like your beer?",
+    options: [
+      { value: "familiar", label: "Something familiar" },
+      { value: "different", label: "Something a bit different" },
+      { value: "surprise", label: "Surprise me" },
+    ],
+  },
+  {
+    id: "budget",
+    question: "What's your budget?",
+    options: [
+      { value: "affordable", label: "Keeping it affordable" },
+      { value: "treat", label: "A little treat" },
+      { value: "all-out", label: "Go all out" },
+    ],
+  },
+];
+
+type Answers = Record<string, string>;
+
+function getActiveSteps(answers: Answers): StepDef[] {
+  return allSteps.filter(
+    (step) =>
+      !step.conditional ||
+      answers[step.conditional.dependsOn] === step.conditional.value
+  );
+}
+
+function DoneScreen() {
+  return (
+    <div className="min-h-screen bg-cream pt-16 flex items-center justify-center px-4">
+      <div className="max-w-sm w-full text-center">
+        <div className="bg-amber-900 rounded-3xl px-8 py-12 mb-6 shadow-lg">
+          <p className="text-5xl mb-5 select-none">🍺</p>
+          <h2 className="text-amber-50 font-extrabold text-2xl mb-3 tracking-tight">
+            We're on it.
+          </h2>
+          <p className="text-amber-300 text-sm leading-relaxed">
+            Your personalised discovery is coming. This feature is in the works — check back when we launch.
+          </p>
+        </div>
+        <Link
+          href="/"
+          className="inline-flex items-center gap-2 text-amber-700 hover:text-amber-900 font-medium text-sm transition-colors"
+        >
+          ← Back to home
+        </Link>
+      </div>
+    </div>
+  );
+}
+
+export default function DiscoverPage() {
+  const [currentStep, setCurrentStep] = useState(0);
+  const [answers, setAnswers] = useState<Answers>({});
+  const [done, setDone] = useState(false);
+
+  if (done) return <DoneScreen />;
+
+  const activeSteps = getActiveSteps(answers);
+  const step = activeSteps[currentStep];
+  const selected = answers[step.id];
+  const isLast = currentStep === activeSteps.length - 1;
+  const progressPct = ((currentStep + 1) / activeSteps.length) * 100;
+
+  function handleSelect(value: string) {
+    setAnswers((prev) => {
+      const updated = { ...prev, [step.id]: value };
+      // If Q3 changes away from "mindful", clear the conditional answer
+      if (step.id === "mood" && value !== "mindful") {
+        delete updated["mood_mindful"];
+      }
+      return updated;
+    });
+  }
+
+  function handleNext() {
+    if (!selected) return;
+    if (isLast) {
+      setDone(true);
+    } else {
+      setCurrentStep((s) => s + 1);
+    }
+  }
+
+  function handleBack() {
+    if (currentStep > 0) setCurrentStep((s) => s - 1);
+  }
+
+  return (
+    <main className="min-h-screen bg-cream pt-16 px-4 sm:px-6">
+      <div className="max-w-xl mx-auto py-10 sm:py-14">
+
+        {/* Progress */}
+        <div className="mb-10">
+          <div className="flex items-center justify-between mb-2">
+            <p className="text-amber-700 text-xs font-semibold uppercase tracking-wide">
+              Step {currentStep + 1} of {activeSteps.length}
+            </p>
+            <p className="text-stone-400 text-xs">
+              {Math.round(progressPct)}% complete
+            </p>
+          </div>
+          <div className="w-full bg-amber-100 rounded-full h-1.5 overflow-hidden">
+            <div
+              className="bg-amber-600 h-full rounded-full transition-all duration-500 ease-out"
+              style={{ width: `${progressPct}%` }}
+            />
+          </div>
+        </div>
+
+        {/* Question */}
+        <h1 className="text-2xl sm:text-3xl font-extrabold text-amber-950 mb-7 tracking-tight leading-snug">
+          {step.question}
+        </h1>
+
+        {/* Options */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-10">
+          {step.options.map((opt) => {
+            const isSelected = selected === opt.value;
+            return (
+              <button
+                key={opt.value}
+                onClick={() => handleSelect(opt.value)}
+                className={`text-left px-5 py-4 rounded-xl border-2 font-medium text-sm transition-all ${
+                  isSelected
+                    ? "border-amber-600 bg-amber-600 text-white shadow-sm"
+                    : "border-amber-200 bg-white text-stone-700 hover:border-amber-400 hover:bg-amber-50"
+                }`}
+              >
+                {opt.label}
+              </button>
+            );
+          })}
+        </div>
+
+        {/* Navigation */}
+        <div className="flex items-center justify-between">
+          <button
+            onClick={handleBack}
+            disabled={currentStep === 0}
+            className="text-amber-700 hover:text-amber-950 font-medium text-sm disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
+          >
+            ← Back
+          </button>
+          <button
+            onClick={handleNext}
+            disabled={!selected}
+            className="bg-amber-700 hover:bg-amber-800 active:bg-amber-900 text-amber-50 font-bold px-7 py-3 rounded-full text-sm transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
+          >
+            {isLast ? "See my beer →" : "Continue →"}
+          </button>
+        </div>
+      </div>
+    </main>
+  );
+}
