@@ -108,6 +108,8 @@ function DoneScreen() {
 export default function DiscoverPage() {
   const [currentStep, setCurrentStep] = useState(0);
   const [answers, setAnswers] = useState<Answers>({});
+  const [email, setEmail] = useState("");
+  const [submitting, setSubmitting] = useState(false);
   const [done, setDone] = useState(false);
 
   if (done) return <DoneScreen />;
@@ -121,7 +123,6 @@ export default function DiscoverPage() {
   function handleSelect(value: string) {
     setAnswers((prev) => {
       const updated = { ...prev, [step.id]: value };
-      // If Q3 changes away from "mindful", clear the conditional answer
       if (step.id === "mood" && value !== "mindful") {
         delete updated["mood_mindful"];
       }
@@ -129,10 +130,29 @@ export default function DiscoverPage() {
     });
   }
 
-  function handleNext() {
+  async function handleNext() {
     if (!selected) return;
     if (isLast) {
-      setDone(true);
+      if (!email) return;
+      setSubmitting(true);
+      try {
+        await fetch("/api/submit", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            occasion: answers.occasion,
+            duration: answers.duration,
+            mood: answers.mood,
+            mood_sub: answers.mood_mindful ?? null,
+            familiarity: answers.familiarity,
+            budget: answers.budget,
+            email,
+          }),
+        });
+      } finally {
+        setSubmitting(false);
+        setDone(true);
+      }
     } else {
       setCurrentStep((s) => s + 1);
     }
@@ -189,6 +209,23 @@ export default function DiscoverPage() {
           })}
         </div>
 
+        {/* Email capture (last step only) */}
+        {isLast && (
+          <div className="mb-8">
+            <label className="block text-amber-900 font-semibold text-sm mb-2">
+              Where should we send your recommendation?
+            </label>
+            <input
+              type="email"
+              required
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              placeholder="your@email.com"
+              className="w-full px-4 py-3 rounded-xl border-2 border-amber-200 bg-white text-stone-700 placeholder-stone-400 text-sm focus:outline-none focus:border-amber-500 transition-colors"
+            />
+          </div>
+        )}
+
         {/* Navigation */}
         <div className="flex items-center justify-between">
           <button
@@ -200,10 +237,10 @@ export default function DiscoverPage() {
           </button>
           <button
             onClick={handleNext}
-            disabled={!selected}
+            disabled={!selected || (isLast && (!email || submitting))}
             className="bg-amber-700 hover:bg-amber-800 active:bg-amber-900 text-amber-50 font-bold px-7 py-3 rounded-full text-sm transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
           >
-            {isLast ? "See my beer →" : "Continue →"}
+            {submitting ? "Sending…" : isLast ? "See my beer →" : "Continue →"}
           </button>
         </div>
       </div>
