@@ -15,54 +15,54 @@ const allSteps: StepDef[] = [
     id: "occasion",
     question: "What's the occasion?",
     options: [
-      { value: "Winding down", label: "Winding down" },
-      { value: "Celebrating", label: "Celebrating" },
-      { value: "Friends round", label: "Friends round" },
-      { value: "Gift", label: "Gift" },
+      { value: "Winding down tonight", label: "Winding down tonight" },
+      { value: "Celebrating something", label: "Celebrating something" },
+      { value: "Friends or family round", label: "Friends or family round" },
+      { value: "Buying a gift", label: "Buying a gift" },
       { value: "Treating myself", label: "Treating myself" },
     ],
   },
   {
     id: "duration",
-    question: "How long is the session?",
+    question: "One great beer or a longer session?",
     options: [
-      { value: "Just the one", label: "Just the one" },
-      { value: "A longer session", label: "A longer session" },
+      { value: "Just the one - make it count", label: "Just the one - make it count" },
+      { value: "Longer session with others", label: "Longer session with others" },
       { value: "Slowly savouring something special", label: "Slowly savouring something special" },
       { value: "A proper evening", label: "A proper evening" },
     ],
   },
   {
     id: "mood",
-    question: "What's your mood?",
+    question: "What do you want tonight to feel like?",
     options: [
-      { value: "Switch off", label: "Switch off" },
-      { value: "Sociable", label: "Sociable" },
-      { value: "Mindful", label: "Mindful" },
-      { value: "Alcohol-free", label: "Alcohol-free" },
+      { value: "Switch off and unwind", label: "Switch off and unwind" },
+      { value: "Relaxed and sociable", label: "Relaxed and sociable" },
+      { value: "Mindful — quality over quantity", label: "Mindful — quality over quantity" },
+      { value: "Alcohol-free tonight", label: "Alcohol-free tonight" },
     ],
   },
   {
     id: "mood_mindful",
-    question: "What are you thinking tonight?",
+    question: "Are you going alcohol-free tonight, or just keeping it light?",
     options: [
       { value: "Going completely alcohol-free", label: "Going completely alcohol-free" },
       { value: "Keeping it light and sessionable", label: "Keeping it light and sessionable" },
     ],
-    conditional: { dependsOn: "mood", value: "Mindful" },
+    conditional: { dependsOn: "mood", value: "Mindful — quality over quantity" },
   },
   {
     id: "familiarity",
-    question: "How do you like your beer?",
+    question: "Something familiar or something new?",
     options: [
-      { value: "Something familiar", label: "Something familiar" },
+      { value: "Stick with what I know", label: "Stick with what I know" },
       { value: "Something a bit different", label: "Something a bit different" },
       { value: "Surprise me", label: "Surprise me" },
     ],
   },
   {
     id: "budget",
-    question: "What's your budget?",
+    question: "Keeping it affordable or treating yourself?",
     options: [
       { value: "Keeping it affordable", label: "Keeping it affordable" },
       { value: "A little treat", label: "A little treat" },
@@ -123,7 +123,7 @@ export default function DiscoverPage() {
   function handleSelect(value: string) {
     setAnswers((prev) => {
       const updated = { ...prev, [step.id]: value };
-      if (step.id === "mood" && value !== "Mindful") {
+      if (step.id === "mood" && value !== "Mindful — quality over quantity") {
         delete updated["mood_mindful"];
       }
       return updated;
