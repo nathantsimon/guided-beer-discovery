@@ -129,7 +129,6 @@ export default function DiscoverPage() {
             occasion: answers.occasion,
             duration: answers.duration,
             mood: answers.mood,
-            mood_sub: answers.mood_mindful ?? null,
             familiarity: answers.familiarity,
             budget: answers.budget,
             email,
