@@ -29,6 +29,7 @@ const allSteps: StepDef[] = [
       { value: "Just the one - make it count", label: "Just the one - make it count" },
       { value: "Longer session with others", label: "Longer session with others" },
       { value: "Slowly savouring something special", label: "Slowly savouring something special" },
+      { value: "Keeping it light tonight", label: "Keeping it light tonight" },
       { value: "A proper evening", label: "A proper evening" },
     ],
   },
@@ -40,16 +41,8 @@ const allSteps: StepDef[] = [
       { value: "Celebratory and upbeat", label: "Celebratory and upbeat" },
       { value: "Relaxed and sociable", label: "Relaxed and sociable" },
       { value: "Mindful — quality over quantity", label: "Mindful — quality over quantity" },
+      { value: "Alcohol-free tonight", label: "Alcohol-free tonight" },
     ],
-  },
-  {
-    id: "mood_mindful",
-    question: "Are you going alcohol-free tonight, or just keeping it light?",
-    options: [
-      { value: "Going completely alcohol-free", label: "Going completely alcohol-free" },
-      { value: "Keeping it light and sessionable", label: "Keeping it light and sessionable" },
-    ],
-    conditional: { dependsOn: "mood", value: "Mindful — quality over quantity" },
   },
   {
     id: "familiarity",
@@ -121,13 +114,7 @@ export default function DiscoverPage() {
   const progressPct = ((currentStep + 1) / activeSteps.length) * 100;
 
   function handleSelect(value: string) {
-    setAnswers((prev) => {
-      const updated = { ...prev, [step.id]: value };
-      if (step.id === "mood" && value !== "Mindful — quality over quantity") {
-        delete updated["mood_mindful"];
-      }
-      return updated;
-    });
+    setAnswers((prev) => ({ ...prev, [step.id]: value }));
   }
 
   async function handleNext() {
