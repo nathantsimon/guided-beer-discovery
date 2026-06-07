@@ -73,17 +73,17 @@ function getActiveSteps(answers: Answers): StepDef[] {
   );
 }
 
-function DoneScreen() {
+function DoneScreen({ email }: { email: string }) {
   return (
     <div className="min-h-screen bg-cream pt-16 flex items-center justify-center px-4">
       <div className="max-w-sm w-full text-center">
         <div className="bg-amber-900 rounded-3xl px-8 py-12 mb-6 shadow-lg">
           <p className="text-5xl mb-5 select-none">🍺</p>
           <h2 className="text-amber-50 font-extrabold text-2xl mb-3 tracking-tight">
-            We're on it.
+            You're all set.
           </h2>
           <p className="text-amber-300 text-sm leading-relaxed">
-            Your personalised discovery is coming. This feature is in the works — check back when we launch.
+            Your recommendation is on its way. We'll be in touch at {email} shortly.
           </p>
         </div>
         <Link
@@ -104,7 +104,7 @@ export default function DiscoverPage() {
   const [submitting, setSubmitting] = useState(false);
   const [done, setDone] = useState(false);
 
-  if (done) return <DoneScreen />;
+  if (done) return <DoneScreen email={email} />;
 
   const activeSteps = getActiveSteps(answers);
   const step = activeSteps[currentStep];
