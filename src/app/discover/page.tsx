@@ -37,9 +37,9 @@ const allSteps: StepDef[] = [
     question: "What do you want tonight to feel like?",
     options: [
       { value: "Switch off and unwind", label: "Switch off and unwind" },
+      { value: "Celebratory and upbeat", label: "Celebratory and upbeat" },
       { value: "Relaxed and sociable", label: "Relaxed and sociable" },
       { value: "Mindful — quality over quantity", label: "Mindful — quality over quantity" },
-      { value: "Alcohol-free tonight", label: "Alcohol-free tonight" },
     ],
   },
   {
