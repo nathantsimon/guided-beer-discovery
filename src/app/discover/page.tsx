@@ -30,7 +30,7 @@ const allSteps: StepDef[] = [
       { value: "Longer session with others", label: "Longer session with others" },
       { value: "Slowly savouring something special", label: "Slowly savouring something special" },
       { value: "Keeping it light", label: "Keeping it light" },
-      { value: "A proper evening", label: "A proper evening" },
+      { value: "Making a night of it", label: "Making a night of it" },
     ],
   },
   {
@@ -57,7 +57,7 @@ const allSteps: StepDef[] = [
     question: "What's most important?",
     options: [
       { value: "Great value", label: "Great value" },
-      { value: "Something special", label: "Something special" },
+      { value: "Worth treating yourself", label: "Worth treating yourself" },
       { value: "Best possible recommendation", label: "Best possible recommendation" },
     ],
   },
