@@ -29,18 +29,18 @@ const allSteps: StepDef[] = [
       { value: "Just the one - make it count", label: "Just the one - make it count" },
       { value: "Longer session with others", label: "Longer session with others" },
       { value: "Slowly savouring something special", label: "Slowly savouring something special" },
-      { value: "Keeping it light tonight", label: "Keeping it light tonight" },
+      { value: "Keeping it light", label: "Keeping it light" },
       { value: "A proper evening", label: "A proper evening" },
     ],
   },
   {
     id: "mood",
-    question: "What do you want tonight to feel like?",
+    question: "What feeling are you hoping for?",
     options: [
       { value: "Switch off and unwind", label: "Switch off and unwind" },
       { value: "Celebratory and upbeat", label: "Celebratory and upbeat" },
       { value: "Relaxed and sociable", label: "Relaxed and sociable" },
-      { value: "Alcohol-free tonight", label: "Alcohol-free tonight" },
+      { value: "Balanced and in control", label: "Balanced and in control" },
     ],
   },
   {
@@ -54,11 +54,11 @@ const allSteps: StepDef[] = [
   },
   {
     id: "budget",
-    question: "Keeping it affordable or treating yourself?",
+    question: "What's most important?",
     options: [
-      { value: "Keeping it affordable", label: "Keeping it affordable" },
-      { value: "A little treat", label: "A little treat" },
-      { value: "Go all out", label: "Go all out" },
+      { value: "Great value", label: "Great value" },
+      { value: "Something special", label: "Something special" },
+      { value: "Best possible recommendation", label: "Best possible recommendation" },
     ],
   },
 ];
