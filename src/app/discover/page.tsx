@@ -15,7 +15,7 @@ const allSteps: StepDef[] = [
     id: "occasion",
     question: "What's the occasion?",
     options: [
-      { value: "Winding down tonight", label: "Winding down tonight" },
+      { value: "Winding down", label: "Winding down" },
       { value: "Celebrating something", label: "Celebrating something" },
       { value: "Friends or family round", label: "Friends or family round" },
       { value: "Buying a gift", label: "Buying a gift" },
