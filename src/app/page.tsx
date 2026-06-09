@@ -34,7 +34,7 @@ export default function HomePage() {
               you cheers.
             </h1>
             <p className="text-amber-200 text-lg sm:text-xl leading-relaxed max-w-md mb-10">
-              Tell us a little about the occasion. We'll do the thinking so you can enjoy the beer.
+              Because choosing shouldn't be the hard part.
             </p>
             <Link
               href="/discover"
