@@ -29,9 +29,10 @@ const q4SoloOptions = [
   { value: "Surprise me", label: "Surprise me" },
 ];
 
-// Q4 options — social routes (L29: variety vs theme)
+// Q4 options — social routes (L29: variety vs special vs story)
 const q4SocialOptions = [
   { value: "Something for everyone", label: "Something for everyone" },
+  { value: "Something a bit special", label: "Something a bit special" },
   { value: "Something with a story", label: "Something with a story" },
 ];
 
@@ -39,14 +40,14 @@ const q4SocialOptions = [
 const q5SoloOptions = [
   { value: "Great value", label: "Great value" },
   { value: "Worth treating yourself", label: "Worth treating yourself" },
-  { value: "Best possible recommendation", label: "Best possible recommendation" },
+  { value: "Go all out", label: "Go all out" },
 ];
 
-// Q5 options — social routes (L30: per-head framing)
+// Q5 options — social routes (L30: occasion-emotional framing)
 const q5SocialOptions = [
-  { value: "About £3-4 a head", label: "About £3–4 a head" },
-  { value: "About £5-6 a head", label: "About £5–6 a head" },
-  { value: "Best we can do", label: "Best we can do" },
+  { value: "Good value all round", label: "Good value all round" },
+  { value: "Worth doing it properly", label: "Worth doing it properly" },
+  { value: "Pull out all the stops", label: "Pull out all the stops" },
 ];
 
 // Base steps — Q4 and Q5 options are overridden at render time based on isSocialRoute
@@ -147,8 +148,6 @@ export default function DiscoverPage() {
   const isLast = currentStep === activeSteps.length - 1;
   const progressPct = ((currentStep + 1) / activeSteps.length) * 100;
 
-  // Clear Q4/Q5 answers when social route status changes mid-flow
-  // (handles the case where someone goes back and changes Q1 or Q2)
   function handleSelect(value: string) {
     setAnswers((prev) => {
       const next = { ...prev, [step.id]: value };
