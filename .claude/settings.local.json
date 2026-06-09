@@ -5,7 +5,8 @@
       "Bash(npx create-next-app@latest *)",
       "Bash(npx next *)",
       "Bash(npm run *)",
-      "Bash(npm install *)"
+      "Bash(npm install *)",
+      "Bash(node *)"
     ]
   }
 }

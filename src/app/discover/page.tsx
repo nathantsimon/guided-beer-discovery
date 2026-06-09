@@ -7,10 +7,50 @@ type StepDef = {
   id: string;
   question: string;
   options: { value: string; label: string }[];
-  conditional?: { dependsOn: string; value: string };
 };
 
-const allSteps: StepDef[] = [
+type Answers = Record<string, string>;
+
+// Social route detection (L29, L30)
+// Fires when Q1 = friends-or-family-round, OR when Q1 = winding-down AND Q2 = longer-session-with-others
+function isSocialRoute(answers: Answers): boolean {
+  return (
+    answers.occasion === "Friends or family round" ||
+    (answers.occasion === "Winding down" &&
+      answers.duration === "Longer session with others")
+  );
+}
+
+// Q4 options — solo routes (L24: four options including Take me somewhere)
+const q4SoloOptions = [
+  { value: "Stick with what I know", label: "Stick with what I know" },
+  { value: "Something a bit different", label: "Something a bit different" },
+  { value: "Take me somewhere", label: "Take me somewhere" },
+  { value: "Surprise me", label: "Surprise me" },
+];
+
+// Q4 options — social routes (L29: variety vs theme)
+const q4SocialOptions = [
+  { value: "Something for everyone", label: "Something for everyone" },
+  { value: "Something with a story", label: "Something with a story" },
+];
+
+// Q5 options — solo routes
+const q5SoloOptions = [
+  { value: "Great value", label: "Great value" },
+  { value: "Worth treating yourself", label: "Worth treating yourself" },
+  { value: "Best possible recommendation", label: "Best possible recommendation" },
+];
+
+// Q5 options — social routes (L30: per-head framing)
+const q5SocialOptions = [
+  { value: "About £3-4 a head", label: "About £3–4 a head" },
+  { value: "About £5-6 a head", label: "About £5–6 a head" },
+  { value: "Best we can do", label: "Best we can do" },
+];
+
+// Base steps — Q4 and Q5 options are overridden at render time based on isSocialRoute
+const baseSteps: StepDef[] = [
   {
     id: "occasion",
     question: "What's the occasion?",
@@ -46,31 +86,26 @@ const allSteps: StepDef[] = [
   {
     id: "familiarity",
     question: "Something familiar or something new?",
-    options: [
-      { value: "Stick with what I know", label: "Stick with what I know" },
-      { value: "Something a bit different", label: "Something a bit different" },
-      { value: "Surprise me", label: "Surprise me" },
-    ],
+    options: q4SoloOptions, // overridden at render if social route
   },
   {
     id: "budget",
     question: "What's most important?",
-    options: [
-      { value: "Great value", label: "Great value" },
-      { value: "Worth treating yourself", label: "Worth treating yourself" },
-      { value: "Best possible recommendation", label: "Best possible recommendation" },
-    ],
+    options: q5SoloOptions, // overridden at render if social route
   },
 ];
 
-type Answers = Record<string, string>;
-
 function getActiveSteps(answers: Answers): StepDef[] {
-  return allSteps.filter(
-    (step) =>
-      !step.conditional ||
-      answers[step.conditional.dependsOn] === step.conditional.value
-  );
+  const social = isSocialRoute(answers);
+  return baseSteps.map((step) => {
+    if (step.id === "familiarity") {
+      return { ...step, options: social ? q4SocialOptions : q4SoloOptions };
+    }
+    if (step.id === "budget") {
+      return { ...step, options: social ? q5SocialOptions : q5SoloOptions };
+    }
+    return step;
+  });
 }
 
 function DoneScreen({ email }: { email: string }) {
@@ -112,8 +147,19 @@ export default function DiscoverPage() {
   const isLast = currentStep === activeSteps.length - 1;
   const progressPct = ((currentStep + 1) / activeSteps.length) * 100;
 
+  // Clear Q4/Q5 answers when social route status changes mid-flow
+  // (handles the case where someone goes back and changes Q1 or Q2)
   function handleSelect(value: string) {
-    setAnswers((prev) => ({ ...prev, [step.id]: value }));
+    setAnswers((prev) => {
+      const next = { ...prev, [step.id]: value };
+      // If occasion or duration changes, clear familiarity and budget
+      // so stale social/solo answers don't persist
+      if (step.id === "occasion" || step.id === "duration") {
+        delete next.familiarity;
+        delete next.budget;
+      }
+      return next;
+    });
   }
 
   async function handleNext() {
