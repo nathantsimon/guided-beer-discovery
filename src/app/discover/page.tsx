@@ -11,29 +11,17 @@ type StepDef = {
 
 type Answers = Record<string, string>;
 
-// Social route detection (L29, L30)
-// Fires when Q1 = friends-or-family-round, OR when Q1 = winding-down AND Q3 = a-proper-session
+// Social route detection — fires when Q3 (mood) = "A proper session"
 function isSocialRoute(answers: Answers): boolean {
-  return (
-    answers.occasion === "Friends or family round" ||
-    (answers.occasion === "Winding down" &&
-      answers.mood === "A proper session")
-  );
+  return answers.mood === "A proper session";
 }
 
-// Q4 options — solo routes (four options including Take me somewhere)
-const q4SoloOptions = [
+// Q4 options — always shown (familiarity/provenance)
+const q4Options = [
   { value: "Stick with what I know", label: "Stick with what I know" },
   { value: "Something a bit different", label: "Something a bit different" },
   { value: "Take me somewhere", label: "Take me somewhere" },
   { value: "Surprise me", label: "Surprise me" },
-];
-
-// Q4 options — social routes (variety vs special vs story)
-const q4SocialOptions = [
-  { value: "Something for everyone", label: "Something for everyone" },
-  { value: "Something a bit special", label: "Something a bit special" },
-  { value: "Something with a story", label: "Something with a story" },
 ];
 
 // Q5 options — solo routes
@@ -50,7 +38,7 @@ const q5SocialOptions = [
   { value: "Pull out all the stops", label: "Pull out all the stops" },
 ];
 
-// Base steps — Q4 and Q5 options are overridden at render time based on isSocialRoute
+// Base steps — Q5 options are overridden at render time based on isSocialRoute
 const baseSteps: StepDef[] = [
   {
     id: "occasion",
@@ -87,7 +75,7 @@ const baseSteps: StepDef[] = [
   {
     id: "familiarity",
     question: "Something familiar or something new?",
-    options: q4SoloOptions, // overridden at render if social route
+    options: q4Options,
   },
   {
     id: "budget",
@@ -99,9 +87,6 @@ const baseSteps: StepDef[] = [
 function getActiveSteps(answers: Answers): StepDef[] {
   const social = isSocialRoute(answers);
   return baseSteps.map((step) => {
-    if (step.id === "familiarity") {
-      return { ...step, options: social ? q4SocialOptions : q4SoloOptions };
-    }
     if (step.id === "budget") {
       return { ...step, options: social ? q5SocialOptions : q5SoloOptions };
     }
@@ -239,10 +224,8 @@ export default function DiscoverPage() {
   function handleSelect(value: string) {
     setAnswers((prev) => {
       const next = { ...prev, [step.id]: value };
-      // If occasion or mood changes, clear familiarity and budget
-      // so stale social/solo answers don't persist (both feed isSocialRoute)
-      if (step.id === "occasion" || step.id === "mood") {
-        delete next.familiarity;
+      // If mood changes, clear budget so a stale social/solo Q5 answer doesn't persist
+      if (step.id === "mood") {
         delete next.budget;
       }
       return next;
