@@ -12,16 +12,16 @@ type StepDef = {
 type Answers = Record<string, string>;
 
 // Social route detection (L29, L30)
-// Fires when Q1 = friends-or-family-round, OR when Q1 = winding-down AND Q2 = longer-session-with-others
+// Fires when Q1 = friends-or-family-round, OR when Q1 = winding-down AND Q3 = a-proper-session
 function isSocialRoute(answers: Answers): boolean {
   return (
     answers.occasion === "Friends or family round" ||
     (answers.occasion === "Winding down" &&
-      answers.duration === "Longer session with others")
+      answers.mood === "A proper session")
   );
 }
 
-// Q4 options — solo routes (L24: four options including Take me somewhere)
+// Q4 options — solo routes (four options including Take me somewhere)
 const q4SoloOptions = [
   { value: "Stick with what I know", label: "Stick with what I know" },
   { value: "Something a bit different", label: "Something a bit different" },
@@ -29,7 +29,7 @@ const q4SoloOptions = [
   { value: "Surprise me", label: "Surprise me" },
 ];
 
-// Q4 options — social routes (L29: variety vs special vs story)
+// Q4 options — social routes (variety vs special vs story)
 const q4SocialOptions = [
   { value: "Something for everyone", label: "Something for everyone" },
   { value: "Something a bit special", label: "Something a bit special" },
@@ -43,7 +43,7 @@ const q5SoloOptions = [
   { value: "Go all out", label: "Go all out" },
 ];
 
-// Q5 options — social routes (L30: occasion-emotional framing)
+// Q5 options — social routes (occasion-emotional framing)
 const q5SocialOptions = [
   { value: "Good value all round", label: "Good value all round" },
   { value: "Worth doing it properly", label: "Worth doing it properly" },
@@ -65,23 +65,23 @@ const baseSteps: StepDef[] = [
   },
   {
     id: "duration",
-    question: "One great beer or a longer session?",
+    question: "What does this one need to feel like?",
     options: [
-      { value: "Just the one - make it count", label: "Just the one - make it count" },
-      { value: "Longer session with others", label: "Longer session with others" },
-      { value: "Slowly savouring something special", label: "Slowly savouring something special" },
-      { value: "Keeping it light", label: "Keeping it light" },
-      { value: "Making a night of it", label: "Making a night of it" },
+      { value: "Time to decompress", label: "Time to decompress" },
+      { value: "Earned it", label: "Earned it" },
+      { value: "Relaxed, nothing serious", label: "Relaxed, nothing serious" },
+      { value: "Want to make the right choice", label: "Want to make the right choice" },
     ],
   },
   {
     id: "mood",
-    question: "What feeling are you hoping for?",
+    question: "How are you drinking?",
     options: [
-      { value: "Switch off and unwind", label: "Switch off and unwind" },
-      { value: "Celebratory and upbeat", label: "Celebratory and upbeat" },
-      { value: "Relaxed and sociable", label: "Relaxed and sociable" },
-      { value: "Balanced and in control", label: "Balanced and in control" },
+      { value: "Just the one", label: "Just the one" },
+      { value: "Settling in for the occasion", label: "Settling in for the occasion" },
+      { value: "Keeping it light", label: "Keeping it light" },
+      { value: "A proper session", label: "A proper session" },
+      { value: "Alcohol-free", label: "Alcohol-free" },
     ],
   },
   {
@@ -139,21 +139,109 @@ export default function DiscoverPage() {
   const [email, setEmail] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const [done, setDone] = useState(false);
+  const [showDietary, setShowDietary] = useState(false);
+  const [dietaryVegan, setDietaryVegan] = useState(false);
+  const [dietaryGlutenFree, setDietaryGlutenFree] = useState(false);
 
   if (done) return <DoneScreen email={email} />;
 
   const activeSteps = getActiveSteps(answers);
+  const totalSteps = activeSteps.length;
+
+  async function submitForm() {
+    setSubmitting(true);
+    try {
+      await fetch("/api/submit", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          occasion: answers.occasion,
+          duration: answers.duration,
+          mood: answers.mood,
+          familiarity: answers.familiarity,
+          budget: answers.budget,
+          email,
+          dietary_vegan: dietaryVegan,
+          dietary_gluten_free: dietaryGlutenFree,
+        }),
+      });
+    } finally {
+      setSubmitting(false);
+      setDone(true);
+    }
+  }
+
+  if (showDietary) {
+    return (
+      <main className="min-h-screen bg-cream pt-16 px-4 sm:px-6">
+        <div className="max-w-xl mx-auto py-10 sm:py-14">
+
+          {/* Progress — stays at Step 5 of 5 */}
+          <div className="mb-10">
+            <div className="flex items-center justify-between mb-2">
+              <p className="text-amber-700 text-xs font-semibold uppercase tracking-wide">
+                Step {totalSteps} of {totalSteps}
+              </p>
+              <p className="text-stone-400 text-xs">100% complete</p>
+            </div>
+            <div className="w-full bg-amber-100 rounded-full h-1.5 overflow-hidden">
+              <div className="bg-amber-600 h-full rounded-full" style={{ width: "100%" }} />
+            </div>
+          </div>
+
+          {/* Heading */}
+          <h1 className="text-2xl sm:text-3xl font-extrabold text-amber-950 mb-7 tracking-tight leading-snug">
+            Before we go — anything to flag?
+          </h1>
+
+          {/* Checkboxes */}
+          <div className="flex flex-col gap-4 mb-10">
+            <label className="flex items-center gap-3 cursor-pointer">
+              <input
+                type="checkbox"
+                checked={dietaryVegan}
+                onChange={(e) => setDietaryVegan(e.target.checked)}
+                className="w-5 h-5 rounded border-amber-300 accent-amber-600"
+              />
+              <span className="text-stone-700 font-medium text-sm">Vegan only</span>
+            </label>
+            <label className="flex items-center gap-3 cursor-pointer">
+              <input
+                type="checkbox"
+                checked={dietaryGlutenFree}
+                onChange={(e) => setDietaryGlutenFree(e.target.checked)}
+                className="w-5 h-5 rounded border-amber-300 accent-amber-600"
+              />
+              <span className="text-stone-700 font-medium text-sm">Gluten-free only</span>
+            </label>
+          </div>
+
+          {/* Submit */}
+          <div className="flex justify-end">
+            <button
+              onClick={submitForm}
+              disabled={submitting}
+              className="bg-amber-700 hover:bg-amber-800 active:bg-amber-900 text-amber-50 font-bold px-7 py-3 rounded-full text-sm transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
+            >
+              {submitting ? "Sending…" : "Send my recommendation."}
+            </button>
+          </div>
+        </div>
+      </main>
+    );
+  }
+
   const step = activeSteps[currentStep];
   const selected = answers[step.id];
-  const isLast = currentStep === activeSteps.length - 1;
-  const progressPct = ((currentStep + 1) / activeSteps.length) * 100;
+  const isLast = currentStep === totalSteps - 1;
+  const progressPct = ((currentStep + 1) / totalSteps) * 100;
 
   function handleSelect(value: string) {
     setAnswers((prev) => {
       const next = { ...prev, [step.id]: value };
-      // If occasion or duration changes, clear familiarity and budget
-      // so stale social/solo answers don't persist
-      if (step.id === "occasion" || step.id === "duration") {
+      // If occasion or mood changes, clear familiarity and budget
+      // so stale social/solo answers don't persist (both feed isSocialRoute)
+      if (step.id === "occasion" || step.id === "mood") {
         delete next.familiarity;
         delete next.budget;
       }
@@ -161,28 +249,11 @@ export default function DiscoverPage() {
     });
   }
 
-  async function handleNext() {
+  function handleNext() {
     if (!selected) return;
     if (isLast) {
       if (!email) return;
-      setSubmitting(true);
-      try {
-        await fetch("/api/submit", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            occasion: answers.occasion,
-            duration: answers.duration,
-            mood: answers.mood,
-            familiarity: answers.familiarity,
-            budget: answers.budget,
-            email,
-          }),
-        });
-      } finally {
-        setSubmitting(false);
-        setDone(true);
-      }
+      setShowDietary(true);
     } else {
       setCurrentStep((s) => s + 1);
     }
@@ -200,7 +271,7 @@ export default function DiscoverPage() {
         <div className="mb-10">
           <div className="flex items-center justify-between mb-2">
             <p className="text-amber-700 text-xs font-semibold uppercase tracking-wide">
-              Step {currentStep + 1} of {activeSteps.length}
+              Step {currentStep + 1} of {totalSteps}
             </p>
             <p className="text-stone-400 text-xs">
               {Math.round(progressPct)}% complete
@@ -267,10 +338,10 @@ export default function DiscoverPage() {
           </button>
           <button
             onClick={handleNext}
-            disabled={!selected || (isLast && (!email || submitting))}
+            disabled={!selected || (isLast && !email)}
             className="bg-amber-700 hover:bg-amber-800 active:bg-amber-900 text-amber-50 font-bold px-7 py-3 rounded-full text-sm transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
           >
-            {submitting ? "Sending…" : isLast ? "See my beer →" : "Continue →"}
+            Continue →
           </button>
         </div>
       </div>
