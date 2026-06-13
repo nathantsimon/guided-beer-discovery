@@ -11,9 +11,9 @@ type StepDef = {
 
 type Answers = Record<string, string>;
 
-// Social route detection — fires when Q3 (mood) = "A proper session"
+// Social route — fires when Q1 occasion is a group occasion
 function isSocialRoute(answers: Answers): boolean {
-  return answers.mood === "A proper session";
+  return answers.occasion === "Friends or family round";
 }
 
 // Q4 options — always shown (familiarity/provenance)
@@ -26,12 +26,12 @@ const q4Options = [
 
 // Q5 options — solo routes
 const q5SoloOptions = [
-  { value: "Great value", label: "Great value" },
-  { value: "Worth treating yourself", label: "Worth treating yourself" },
-  { value: "Go all out", label: "Go all out" },
+  { value: "Keep it everyday", label: "Keep it everyday" },
+  { value: "A step up from the usual", label: "A step up from the usual" },
+  { value: "Make it special", label: "Make it special" },
 ];
 
-// Q5 options — social routes (occasion-emotional framing)
+// Q5 options — social routes
 const q5SocialOptions = [
   { value: "Good value all round", label: "Good value all round" },
   { value: "Worth doing it properly", label: "Worth doing it properly" },
@@ -62,14 +62,14 @@ const baseSteps: StepDef[] = [
     ],
   },
   {
-    id: "mood",
-    question: "How are you drinking?",
+    id: "q3",
+    question: "What do you want it to feel like?",
     options: [
-      { value: "Just the one", label: "Just the one" },
-      { value: "Settling in for the occasion", label: "Settling in for the occasion" },
-      { value: "Keeping it light", label: "Keeping it light" },
-      { value: "A proper session", label: "A proper session" },
-      { value: "Alcohol-free", label: "Alcohol-free" },
+      { value: "Relaxed and unfussy", label: "Relaxed and unfussy" },
+      { value: "Fresh and uplifting", label: "Fresh and uplifting" },
+      { value: "Warm and comforting", label: "Warm and comforting" },
+      { value: "Soft and delicate", label: "Soft and delicate" },
+      { value: "Easygoing but in between", label: "Easygoing but in between" },
     ],
   },
   {
@@ -78,7 +78,7 @@ const baseSteps: StepDef[] = [
     options: q4Options,
   },
   {
-    id: "budget",
+    id: "q5",
     question: "What's most important?",
     options: q5SoloOptions, // overridden at render if social route
   },
@@ -87,7 +87,7 @@ const baseSteps: StepDef[] = [
 function getActiveSteps(answers: Answers): StepDef[] {
   const social = isSocialRoute(answers);
   return baseSteps.map((step) => {
-    if (step.id === "budget") {
+    if (step.id === "q5") {
       return { ...step, options: social ? q5SocialOptions : q5SoloOptions };
     }
     return step;
@@ -99,12 +99,12 @@ function DoneScreen({ email }: { email: string }) {
     <div className="min-h-screen bg-cream pt-16 flex items-center justify-center px-4">
       <div className="max-w-sm w-full text-center">
         <div className="bg-amber-900 rounded-3xl px-8 py-12 mb-6 shadow-lg">
-          <p className="text-5xl mb-5 select-none">🍺</p>
+          <p className="text-5xl mb-5 select-none">🍷</p>
           <h2 className="text-amber-50 font-extrabold text-2xl mb-3 tracking-tight">
-            You're all set.
+            You&apos;re all set.
           </h2>
           <p className="text-amber-300 text-sm leading-relaxed">
-            Your recommendation is on its way. We'll be in touch at {email} shortly.
+            Your recommendation is on its way. We&apos;ll be in touch at {email} shortly.
           </p>
         </div>
         <Link
@@ -124,14 +124,18 @@ export default function DiscoverPage() {
   const [email, setEmail] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const [done, setDone] = useState(false);
-  const [showDietary, setShowDietary] = useState(false);
-  const [dietaryVegan, setDietaryVegan] = useState(false);
-  const [dietaryGlutenFree, setDietaryGlutenFree] = useState(false);
+  const [showFilters, setShowFilters] = useState(false);
+  const [isColourFilter, setIsColourFilter] = useState<"none" | "no-red" | "no-white">("none");
+  const [dietaryPref, setDietaryPref] = useState<"none" | "vegan" | "organic">("none");
 
   if (done) return <DoneScreen email={email} />;
 
   const activeSteps = getActiveSteps(answers);
   const totalSteps = activeSteps.length;
+
+  // State machine signals — derived from answers
+  const isRoséSignal = answers.q3 === "Easygoing but in between";
+  const isPremiumBias = answers.q5 === "A step up from the usual" || answers.q5 === "Make it special";
 
   async function submitForm() {
     setSubmitting(true);
@@ -142,12 +146,14 @@ export default function DiscoverPage() {
         body: JSON.stringify({
           occasion: answers.occasion,
           duration: answers.duration,
-          mood: answers.mood,
+          q3: answers.q3,
           familiarity: answers.familiarity,
-          budget: answers.budget,
+          q5: answers.q5,
           email,
-          dietary_vegan: dietaryVegan,
-          dietary_gluten_free: dietaryGlutenFree,
+          colour_filter: isColourFilter,
+          dietary_pref: dietaryPref,
+          is_rose_signal: isRoséSignal,
+          is_premium_bias: isPremiumBias,
         }),
       });
     } finally {
@@ -156,7 +162,7 @@ export default function DiscoverPage() {
     }
   }
 
-  if (showDietary) {
+  if (showFilters) {
     return (
       <main className="min-h-screen bg-cream pt-16 px-4 sm:px-6">
         <div className="max-w-xl mx-auto py-10 sm:py-14">
@@ -175,30 +181,64 @@ export default function DiscoverPage() {
           </div>
 
           {/* Heading */}
-          <h1 className="text-2xl sm:text-3xl font-extrabold text-amber-950 mb-7 tracking-tight leading-snug">
+          <h1 className="text-2xl sm:text-3xl font-extrabold text-amber-950 mb-8 tracking-tight leading-snug">
             Before we go — anything to flag?
           </h1>
 
-          {/* Checkboxes */}
-          <div className="flex flex-col gap-4 mb-10">
-            <label className="flex items-center gap-3 cursor-pointer">
-              <input
-                type="checkbox"
-                checked={dietaryVegan}
-                onChange={(e) => setDietaryVegan(e.target.checked)}
-                className="w-5 h-5 rounded border-amber-300 accent-amber-600"
-              />
-              <span className="text-stone-700 font-medium text-sm">Vegan only</span>
-            </label>
-            <label className="flex items-center gap-3 cursor-pointer">
-              <input
-                type="checkbox"
-                checked={dietaryGlutenFree}
-                onChange={(e) => setDietaryGlutenFree(e.target.checked)}
-                className="w-5 h-5 rounded border-amber-300 accent-amber-600"
-              />
-              <span className="text-stone-700 font-medium text-sm">Gluten-free only</span>
-            </label>
+          {/* Colour preference */}
+          <div className="mb-8">
+            <p className="text-stone-600 font-semibold text-sm mb-3">Colour preference</p>
+            <div className="flex flex-wrap gap-3">
+              {(["none", "no-red", "no-white"] as const).map((val) => {
+                const labels: Record<string, string> = {
+                  none: "No preference",
+                  "no-red": "No red wine",
+                  "no-white": "No white wine",
+                };
+                const isSelected = isColourFilter === val;
+                return (
+                  <button
+                    key={val}
+                    onClick={() => setIsColourFilter(val)}
+                    className={`px-5 py-3 rounded-xl border-2 font-medium text-sm transition-all ${
+                      isSelected
+                        ? "border-amber-600 bg-amber-600 text-white shadow-sm"
+                        : "border-amber-200 bg-white text-stone-700 hover:border-amber-400 hover:bg-amber-50"
+                    }`}
+                  >
+                    {labels[val]}
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+
+          {/* Dietary preference */}
+          <div className="mb-10">
+            <p className="text-stone-600 font-semibold text-sm mb-3">Dietary preference</p>
+            <div className="flex flex-wrap gap-3">
+              {(["vegan", "organic", "none"] as const).map((val) => {
+                const labels: Record<string, string> = {
+                  vegan: "Vegan wines only",
+                  organic: "Organic or natural wines only",
+                  none: "Neither",
+                };
+                const isSelected = dietaryPref === val;
+                return (
+                  <button
+                    key={val}
+                    onClick={() => setDietaryPref(val)}
+                    className={`px-5 py-3 rounded-xl border-2 font-medium text-sm transition-all ${
+                      isSelected
+                        ? "border-amber-600 bg-amber-600 text-white shadow-sm"
+                        : "border-amber-200 bg-white text-stone-700 hover:border-amber-400 hover:bg-amber-50"
+                    }`}
+                  >
+                    {labels[val]}
+                  </button>
+                );
+              })}
+            </div>
           </div>
 
           {/* Submit */}
@@ -208,7 +248,7 @@ export default function DiscoverPage() {
               disabled={submitting}
               className="bg-amber-700 hover:bg-amber-800 active:bg-amber-900 text-amber-50 font-bold px-7 py-3 rounded-full text-sm transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
             >
-              {submitting ? "Sending…" : "Send my recommendation."}
+              {submitting ? "Sending…" : "Find my wine"}
             </button>
           </div>
         </div>
@@ -224,9 +264,9 @@ export default function DiscoverPage() {
   function handleSelect(value: string) {
     setAnswers((prev) => {
       const next = { ...prev, [step.id]: value };
-      // If mood changes, clear budget so a stale social/solo Q5 answer doesn't persist
-      if (step.id === "mood") {
-        delete next.budget;
+      // Clear Q5 answer when Q3 changes so a stale social/solo answer doesn't persist
+      if (step.id === "q3") {
+        delete next.q5;
       }
       return next;
     });
@@ -236,7 +276,7 @@ export default function DiscoverPage() {
     if (!selected) return;
     if (isLast) {
       if (!email) return;
-      setShowDietary(true);
+      setShowFilters(true);
     } else {
       setCurrentStep((s) => s + 1);
     }
